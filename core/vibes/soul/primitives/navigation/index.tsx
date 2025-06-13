@@ -6,8 +6,9 @@ import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import * as Popover from '@radix-ui/react-popover';
 import { clsx } from 'clsx';
 import debounce from 'lodash.debounce';
-import { ArrowRight, ChevronDown, Search, SearchIcon, ShoppingBag, User } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { ArrowRight, ChevronDown, Search, SearchIcon } from 'lucide-react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import {brandLogos} from  '~/data/brandLogos'
 import React, {
   forwardRef,
   Ref,
@@ -27,8 +28,10 @@ import { Logo } from '@/vibes/soul/primitives/logo';
 import { Price } from '@/vibes/soul/primitives/price-label';
 import { ProductCard } from '@/vibes/soul/primitives/product-card';
 import { Link } from '~/components/link';
-import { useSearch } from '~/context/search-context';
-import { usePathname, useRouter } from '~/i18n/routing';
+
+// Default values for top header
+const DEFAULT_SHOP_AT_TEXT = 'Shop at';
+const DEFAULT_SHOP_AT_LINK = 'VPG Store';
 
 interface Link {
   label: string;
@@ -98,7 +101,7 @@ interface Props<S extends SearchResult> {
   locales?: Locale[];
   activeLocaleId?: string;
   currencies?: Currency[];
-  activeCurrencyId?: Streamable<string | undefined>;
+  activeCurrencyId?: string;
   currencyAction?: CurrencyAction;
   logo?: Streamable<string | { src: string; alt: string } | null>;
   logoWidth?: number;
@@ -118,71 +121,25 @@ interface Props<S extends SearchResult> {
   openSearchPopupLabel?: string;
   searchLabel?: string;
   mobileMenuTriggerLabel?: string;
+  // Top header props
+  shopAtText?: string;
+  shopAtLink?: string;
 }
 
-const MobileMenuButton = forwardRef<
-  React.ComponentRef<'button'>,
-  { open: boolean } & React.ComponentPropsWithoutRef<'button'>
->(({ open, className, ...rest }, ref) => {
-  return (
-    <button
-      {...rest}
-      className={clsx(
-        'group relative rounded-lg p-2 ring-[var(--nav-focus,hsl(var(--primary)))] outline-0 transition-colors focus-visible:ring-2',
-        className,
-      )}
-      ref={ref}
-    >
-      <div className="flex h-4 w-4 origin-center transform flex-col justify-between overflow-hidden transition-all duration-300">
-        <div
-          className={clsx(
-            'h-px origin-left transform bg-[var(--nav-mobile-button-icon,hsl(var(--foreground)))] transition-all duration-300',
-            open ? 'translate-x-10' : 'w-7',
-          )}
-        />
-        <div
-          className={clsx(
-            'h-px transform rounded-sm bg-[var(--nav-mobile-button-icon,hsl(var(--foreground)))] transition-all delay-75 duration-300',
-            open ? 'translate-x-10' : 'w-7',
-          )}
-        />
-        <div
-          className={clsx(
-            'h-px origin-left transform bg-[var(--nav-mobile-button-icon,hsl(var(--foreground)))] transition-all delay-150 duration-300',
-            open ? 'translate-x-10' : 'w-7',
-          )}
-        />
-
-        <div
-          className={clsx(
-            'absolute top-2 flex transform items-center justify-between bg-[var(--nav-mobile-button-icon,hsl(var(--foreground)))] transition-all duration-500',
-            open ? 'w-12 translate-x-0' : 'w-0 -translate-x-10',
-          )}
-        >
-          <div
-            className={clsx(
-              'absolute h-px w-4 transform bg-[var(--nav-mobile-button-icon,hsl(var(--foreground)))] transition-all delay-300 duration-500',
-              open ? 'rotate-45' : 'rotate-0',
-            )}
-          />
-          <div
-            className={clsx(
-              'absolute h-px w-4 transform bg-[var(--nav-mobile-button-icon,hsl(var(--foreground)))] transition-all delay-300 duration-500',
-              open ? '-rotate-45' : 'rotate-0',
-            )}
-          />
-        </div>
-      </div>
-    </button>
-  );
-});
-
-MobileMenuButton.displayName = 'MobileMenuButton';
-
 const navGroupClassName =
-  'block rounded-lg bg-[var(--nav-group-background,transparent)] px-3 py-2 font-[family-name:var(--nav-group-font-family,var(--font-family-body))] font-medium text-[var(--nav-group-text,hsl(var(--foreground)))] ring-[var(--nav-focus,hsl(var(--primary)))] transition-colors hover:bg-[var(--nav-group-background-hover,hsl(var(--contrast-100)))] hover:text-[var(--nav-group-text-hover,hsl(var(--foreground)))] focus-visible:outline-0 focus-visible:ring-2';
+  'block rounded-lg bg-[var(--nav-group-background,transparent)] px-3 py-2 font-[family-name:var(--nav-group-font-family,var(--font-family-body))] font-medium text-[var(--nav-group-text,hsl(var(--foreground)))] ring-[var(--nav-focus,hsl(var(--primary)))] transition-colors hover:bg-[var(--nav-group-background-hover,hsl(var(--contrast-100)))] hover:text-[var(--nav-group-text-hover,hsl(var(--foreground)))] focus-visible:outline-0 focus-visible:ring-2 @xs:px-2 @xs:py-1.5 @xs:text-sm';
+
 const navButtonClassName =
-  'relative rounded-lg bg-[var(--nav-button-background,transparent)] p-1.5 text-[var(--nav-button-icon,hsl(var(--foreground)))] ring-[var(--nav-focus,hsl(var(--primary)))] transition-colors focus-visible:outline-0 focus-visible:ring-2 @4xl:hover:bg-[var(--nav-button-background-hover,hsl(var(--contrast-100)))] @4xl:hover:text-[var(--nav-button-icon-hover,hsl(var(--foreground)))]';
+  'relative rounded-lg bg-[var(--nav-button-background,transparent)] p-1.5 text-[var(--nav-button-icon,hsl(var(--foreground)))] ring-[var(--nav-focus,hsl(var(--primary)))] transition-colors focus-visible:outline-0 focus-visible:ring-2 hover:bg-[var(--nav-button-background-hover,hsl(var(--contrast-100)))] hover:text-[var(--nav-button-icon-hover,hsl(var(--foreground)))] @xs:p-1';
+
+const navLinkClassName =
+  'block rounded-lg bg-[var(--nav-link-background,transparent)] px-3 py-2 font-[family-name:var(--nav-link-font-family,var(--font-family-body))] text-sm font-medium text-[var(--nav-link-text,hsl(var(--foreground)))] ring-[var(--nav-focus,hsl(var(--primary)))] transition-colors hover:bg-[var(--nav-link-background-hover,hsl(var(--contrast-100)))] hover:text-[var(--nav-link-text-hover,hsl(var(--foreground)))] focus-visible:outline-0 focus-visible:ring-2 @xs:px-2 @xs:py-1.5 @xs:text-xs';
+
+const mobileNavLinkClassName =
+  'flex items-center gap-4 py-3 text-base font-medium text-[var(--nav-mobile-link-text,hsl(var(--foreground)))] transition-colors hover:text-[var(--nav-mobile-link-text-hover,hsl(var(--primary)))] @xs:py-2 @xs:text-sm';
+
+const mobileNavButtonClassName =
+  'flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--nav-mobile-button-background,transparent)] text-[var(--nav-mobile-button-icon,hsl(var(--foreground)))] transition-colors hover:bg-[var(--nav-mobile-button-background-hover,hsl(var(--contrast-100)))] @xs:h-10 @xs:w-10';
 
 /**
  * This component supports various CSS variables for theming. Here's a comprehensive list, along
@@ -271,8 +228,8 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
     linksPosition = 'center',
     activeLocaleId,
     locales,
-    currencies: streamableCurrencies,
-    activeCurrencyId: streamableActiveCurrencyId,
+    currencies,
+    activeCurrencyId,
     currencyAction,
     searchHref,
     searchParamName = 'query',
@@ -283,142 +240,187 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
     accountLabel = 'Profile',
     openSearchPopupLabel = 'Open search popup',
     searchLabel = 'Search',
-    mobileMenuTriggerLabel = 'Toggle navigation',
+    // Top header props with defaults
+    shopAtText = DEFAULT_SHOP_AT_TEXT,
+    shopAtLink = DEFAULT_SHOP_AT_LINK,
   }: Props<S>,
   ref: Ref<HTMLDivElement>,
 ) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isSearchOpen, setIsSearchOpen } = useSearch();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isHirePurchaseEnabled, setIsHirePurchaseEnabled] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state after component mounts
+  useEffect(() => {
+    console.log('Component mounted');
+    setIsMounted(true);
+    
+    // Load initial state from localStorage
+    try {
+      const savedState = localStorage.getItem('hirePurchaseEnabled');
+      console.log('Loaded from localStorage:', savedState);
+      if (savedState !== null) {
+        setIsHirePurchaseEnabled(savedState === 'true');
+      }
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
+    }
+    
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   const pathname = usePathname();
+  const [selectedBrand, setSelectedBrand] = useState<string>('vinod-patel');
 
   useEffect(() => {
-    setIsMobileMenuOpen(false);
     setIsSearchOpen(false);
-  }, [pathname, setIsSearchOpen]);
+  }, [pathname]);
 
   useEffect(() => {
     function handleScroll() {
       setIsSearchOpen(false);
-      setIsMobileMenuOpen(false);
     }
 
     window.addEventListener('scroll', handleScroll);
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [setIsSearchOpen]);
+  }, []);
+
+  // Toggle hire purchase state
+  const toggleHirePurchase = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Toggle clicked, current state:', isHirePurchaseEnabled);
+    
+    setIsHirePurchaseEnabled(prev => {
+      const newValue = !prev;
+      console.log('Updating state to:', newValue);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('hirePurchaseEnabled', String(newValue));
+        console.log('Saved to localStorage');
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+      
+      return newValue;
+    });
+  }, []);
 
   return (
     <NavigationMenu.Root
-      className={clsx('@container relative mx-auto w-full max-w-(--breakpoint-2xl)', className)}
+      className={clsx('relative mx-auto w-full', className)}
       delayDuration={0}
       onValueChange={() => setIsSearchOpen(false)}
       ref={ref}
     >
+
+<div className="w-full bg-black border-b border-gray-700 relative z-10">
+      <div className="p-2">
+        <div className="flex h-8 items-center justify-between px-4 md:px-6">
+          <div className="flex items-center space-x-2">
+            <div 
+              onClick={toggleHirePurchase}
+              className="flex items-center cursor-pointer select-none"
+              role="switch"
+              aria-checked={isHirePurchaseEnabled}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleHirePurchase(e as any);
+                }
+              }}
+            >
+              <div className={`relative h-5 w-10 rounded-full transition-colors duration-200 ease-in-out ${isHirePurchaseEnabled ? 'bg-green-500' : 'bg-gray-400'}`}>
+                <span 
+                  className={`absolute top-[2px] left-[2px] h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${isHirePurchaseEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </div>
+              <span className="ml-2 text-xs md:text-sm text-white font-medium">
+                Hire Purchase
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center space-x-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none">
+                <mask id="mask0_1878_41824" style={{maskType: 'alpha'}} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                  <rect width="24" height="24" fill="#D9D9D9"/>
+                </mask>
+                <g mask="url(#mask0_1878_41824)">
+                  <path d="M5.2112 19.75V13.75H4.0957V12.25L5.1727 7.25H19.5187L20.5957 12.25V13.75H19.4802V19.8845H17.9805V13.75H13.7112V19.75H5.2112ZM6.7112 18.25H12.2112V13.75H6.7112V18.25ZM5.1727 5.75V4.25H19.5187V5.75H5.1727ZM5.62645 12.25H19.065L18.3015 8.75H6.38995L5.62645 12.25Z" fill="white"/>
+                </g>
+              </svg>
+              <span className="text-xs md:text-sm text-white whitespace-nowrap">
+                Shop at <a href="#" className="underline hover:text-gray-300 transition-colors font-medium">VPG</a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
       <div
         className={clsx(
-          'flex items-center justify-between gap-1 bg-[var(--nav-background,hsl(var(--background)))] py-2 pr-2 pl-3 transition-shadow @4xl:rounded-2xl @4xl:px-2 @4xl:pr-2.5 @4xl:pl-6',
+          'flex items-center justify-between bg-black h-[64px] px-6 md:px-8 ',
           isFloating
             ? 'shadow-xl ring-1 ring-[var(--nav-floating-border,hsl(var(--foreground)/10%))]'
             : 'shadow-none ring-0',
         )}
       >
-        {/* Mobile Menu */}
-        <Popover.Root onOpenChange={setIsMobileMenuOpen} open={isMobileMenuOpen}>
-          <Popover.Anchor className="absolute top-full right-0 left-0" />
-          <Popover.Trigger asChild>
-            <MobileMenuButton
-              aria-label={mobileMenuTriggerLabel}
-              className="mr-1 @4xl:hidden"
-              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              open={isMobileMenuOpen}
-            />
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 @container max-h-[calc(var(--radix-popover-content-available-height)-8px)] w-[var(--radix-popper-anchor-width)]">
-              <div className="max-h-[inherit] divide-y divide-[var(--nav-mobile-divider,hsl(var(--contrast-100)))] overflow-y-auto bg-[var(--nav-mobile-background,hsl(var(--background)))]">
-                <Stream
-                  fallback={
-                    <ul className="flex animate-pulse flex-col gap-4 p-5 @4xl:gap-2 @4xl:p-5">
-                      <li>
-                        <span className="bg-contrast-100 block h-4 w-10 rounded-md" />
-                      </li>
-                      <li>
-                        <span className="bg-contrast-100 block h-4 w-14 rounded-md" />
-                      </li>
-                      <li>
-                        <span className="bg-contrast-100 block h-4 w-24 rounded-md" />
-                      </li>
-                      <li>
-                        <span className="bg-contrast-100 block h-4 w-16 rounded-md" />
-                      </li>
-                    </ul>
-                  }
-                  value={streamableLinks}
-                >
-                  {(links) =>
-                    links.map((item, i) => (
-                      <ul className="flex flex-col p-2 @4xl:gap-2 @4xl:p-5" key={i}>
-                        {item.label !== '' && (
-                          <li>
-                            <Link
-                              className="block rounded-lg bg-[var(--nav-mobile-link-background,transparent)] px-3 py-2 font-[family-name:var(--nav-mobile-link-font-family,var(--font-family-body))] font-semibold text-[var(--nav-mobile-link-text,hsl(var(--foreground)))] ring-[var(--nav-focus,hsl(var(--primary)))] transition-colors hover:bg-[var(--nav-mobile-link-background-hover,hsl(var(--contrast-100)))] hover:text-[var(--nav-mobile-link-text-hover,hsl(var(--foreground)))] focus-visible:ring-2 focus-visible:outline-0 @4xl:py-4"
-                              href={item.href}
-                            >
-                              {item.label}
-                            </Link>
-                          </li>
-                        )}
-                        {item.groups
-                          ?.flatMap((group) => group.links)
-                          .map((link, j) => (
-                            <li key={j}>
-                              <Link
-                                className="block rounded-lg bg-[var(--nav-mobile-sub-link-background,transparent)] px-3 py-2 font-[family-name:var(--nav-mobile-sub-link-font-family,var(--font-family-body))] text-sm font-medium text-[var(--nav-mobile-sub-link-text,hsl(var(--contrast-500)))] ring-[var(--nav-focus,hsl(var(--primary)))] transition-colors hover:bg-[var(--nav-mobile-sub-link-background-hover,hsl(var(--contrast-100)))] hover:text-[var(--nav-mobile-sub-link-text-hover,hsl(var(--foreground)))] focus-visible:ring-2 focus-visible:outline-0 @4xl:py-4"
-                                href={link.href}
-                              >
-                                {link.label}
-                              </Link>
-                            </li>
-                          ))}
-                      </ul>
-                    ))
-                  }
-                </Stream>
-              </div>
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
-
         {/* Logo */}
         <div
           className={clsx(
-            'flex items-center justify-start self-stretch',
+            'flex items-center justify-start gap-2 self-stretch',
             linksPosition === 'center' ? 'flex-1' : 'flex-1 @4xl:flex-none',
           )}
         >
-          <Logo
-            className={clsx(streamableMobileLogo != null ? 'hidden @4xl:flex' : 'flex')}
-            height={logoHeight}
-            href={logoHref}
-            label={logoLabel}
-            logo={streamableLogo}
-            width={logoWidth}
-          />
-          {streamableMobileLogo != null && (
-            <Logo
-              className="flex @4xl:hidden"
-              height={mobileLogoHeight}
-              href={logoHref}
-              label={logoLabel}
-              logo={streamableMobileLogo}
-              width={mobileLogoWidth}
-            />
-          )}
+          {Object.values(brandLogos).map((brand) => {
+            const getSvgWithColor = () => {
+              if (brand.id === 'vinod-patel' && brand.id !== selectedBrand) {
+                // Only replace text elements (those with class containing 'text')
+                return brand.svg
+                  .replace(/<text[^>]*fill="[^"]*"[^>]*>/g, (match) => 
+                    match.replace(/fill="[^"]+"/, 'fill="white"')
+                  )
+                  .replace(/<tspan[^>]*fill="[^"]*"[^>]*>/g, (match) => 
+                    match.replace(/fill="[^"]+"/, 'fill="white"')
+                  );
+              } else if (brand.id === 'home-living' && brand.id === selectedBrand) {
+                return brand.svg.replace(/fill="[^"]+"/g, 'fill="#00B9F2"');
+              }
+              return brand.svg;
+            };
+
+            return (
+              <div 
+                key={brand.id}
+                className={clsx(
+                  'p-2 h-full flex items-center justify-center',
+                  {'bg-white': brand.id === selectedBrand}
+                )}
+              >
+                <button 
+                  onClick={() => setSelectedBrand(brand.id)}
+                  className="flex items-center justify-center h-full w-full"
+                  aria-label={`Switch to ${brand.name}`}
+                >
+                  <div 
+                    className="w-auto"
+                    dangerouslySetInnerHTML={{ __html: getSvgWithColor() }} 
+                  />
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         {/* Top Level Nav Links */}
-        <ul
+        {/* <ul
           className={clsx(
             'hidden gap-1 @4xl:flex @4xl:flex-1',
             {
@@ -430,7 +432,7 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
         >
           <Stream
             fallback={
-              <ul className="flex animate-pulse flex-row @4xl:gap-6 @4xl:p-2.5">
+              <ul className="flex animate-pulse flex-row p-2 @4xl:gap-2 @4xl:p-5">
                 <li>
                   <span className="bg-contrast-100 block h-4 w-10 rounded-md" />
                 </li>
@@ -460,11 +462,11 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
                   </NavigationMenu.Trigger>
                   {item.groups != null && item.groups.length > 0 && (
                     <NavigationMenu.Content className="rounded-2xl bg-[var(--nav-menu-background,hsl(var(--background)))] shadow-xl ring-1 ring-[var(--nav-menu-border,hsl(var(--foreground)/5%))]">
-                      <div className="m-auto grid w-full max-w-(--breakpoint-lg) grid-cols-5 justify-center gap-5 px-5 pt-5 pb-8">
+                      <div className="m-auto grid w-full max-w-[var(--breakpoint-lg)] grid-cols-5 justify-center gap-5 px-5 pt-5 pb-8">
                         {item.groups.map((group, columnIndex) => (
                           <ul className="flex flex-col" key={columnIndex}>
                             {/* Second Level Links */}
-                            {group.label != null && group.label !== '' && (
+        {/* {group.label != null && group.label !== '' && (
                               <li>
                                 {group.href != null && group.href !== '' ? (
                                   <Link className={navGroupClassName} href={group.href}>
@@ -496,54 +498,65 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
               ))
             }
           </Stream>
-        </ul>
+        </ul>  */}
 
+        {searchAction ? (
+          // <Popover.Root onOpenChange={setIsSearchOpen} open={isSearchOpen}>
+          //   <Popover.Anchor className="absolute top-full right-0 left-0" />
+          //   <Popover.Trigger asChild>
+          //     <button
+          //       aria-label={openSearchPopupLabel}
+          //       className={navButtonClassName}
+          //       onPointerEnter={(e) => e.preventDefault()}
+          //       onPointerLeave={(e) => e.preventDefault()}
+          //       onPointerMove={(e) => e.preventDefault()}
+          //     >
+          //       <Search size={20} strokeWidth={1} />
+          //     </button>
+          //   </Popover.Trigger>
+          //   <Popover.Portal>
+          //     <Popover.Content className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 @container max-h-[calc(var(--radix-popover-content-available-height)-16px)] w-[var(--radix-popper-anchor-width)] py-2">
+          <div className="flex h-[44px] max-h-[inherit] w-1/2 flex-col rounded-full bg-[var(--nav-search-background,hsl(var(--background)))] ring-1 ring-[var(--nav-search-border,hsl(var(--foreground)/5%))] transition-all duration-200 ease-in-out @4xl:inset-x-0">
+            <SearchForm
+              searchAction={searchAction}
+              searchCtaLabel={searchCtaLabel}
+              searchHref={searchHref}
+              searchInputPlaceholder={searchInputPlaceholder}
+              searchParamName={searchParamName}
+            />
+          </div>
+        ) : (
+          //     </Popover.Content>
+          //   </Popover.Portal>
+          // </Popover.Root>
+          <Link aria-label={searchLabel} className="relative flex items-center justify-center p-1.5 text-[#717680] hover:text-[#4a4f57] transition-colors" href={searchHref}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M17.5 17.5L14.5834 14.5833M16.6667 9.58333C16.6667 13.4954 13.4954 16.6667 9.58333 16.6667C5.67132 16.6667 2.5 13.4954 2.5 9.58333C2.5 5.67132 5.67132 2.5 9.58333 2.5C13.4954 2.5 16.6667 5.67132 16.6667 9.58333ZM6.7112 18.25H12.2112V13.75H6.7112V18.25ZM5.1727 5.75V4.25H19.5187V5.75H5.1727ZM5.62645 12.25H19.065L18.3015 8.75H6.38995L5.62645 12.25Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Link>
+        )}
         {/* Icon Buttons */}
         <div
           className={clsx(
-            'flex items-center justify-end gap-0.5 transition-colors duration-300',
+            'flex items-center justify-end gap-4 lg:gap-8 transition-colors duration-300',
             linksPosition === 'center' ? 'flex-1' : 'flex-1 @4xl:flex-none',
           )}
-        >
-          {searchAction ? (
-            <Popover.Root onOpenChange={setIsSearchOpen} open={isSearchOpen}>
-              <Popover.Anchor className="absolute top-full right-0 left-0" />
-              <Popover.Trigger asChild>
-                <button
-                  aria-label={openSearchPopupLabel}
-                  className={navButtonClassName}
-                  onPointerEnter={(e) => e.preventDefault()}
-                  onPointerLeave={(e) => e.preventDefault()}
-                  onPointerMove={(e) => e.preventDefault()}
-                >
-                  <Search size={20} strokeWidth={1} />
-                </button>
-              </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 @container max-h-[calc(var(--radix-popover-content-available-height)-16px)] w-[var(--radix-popper-anchor-width)] py-2">
-                  <div className="flex max-h-[inherit] flex-col rounded-2xl bg-[var(--nav-search-background,hsl(var(--background)))] shadow-xl ring-1 ring-[var(--nav-search-border,hsl(var(--foreground)/5%))] transition-all duration-200 ease-in-out @4xl:inset-x-0">
-                    <SearchForm
-                      searchAction={searchAction}
-                      searchCtaLabel={searchCtaLabel}
-                      searchHref={searchHref}
-                      searchInputPlaceholder={searchInputPlaceholder}
-                      searchParamName={searchParamName}
-                    />
-                  </div>
-                </Popover.Content>
-              </Popover.Portal>
-            </Popover.Root>
-          ) : (
-            <Link aria-label={searchLabel} className={navButtonClassName} href={searchHref}>
-              <Search size={20} strokeWidth={1} />
-            </Link>
-          )}
 
+        >
+           <SearchIcon
+      className="lg:hidden shrink-0 text-white w-8 h-8"
+      size={20}
+      strokeWidth={1}
+    />
           <Link aria-label={accountLabel} className={navButtonClassName} href={accountHref}>
-            <User size={20} strokeWidth={1} />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white hover:text-gray-300 transition-colors">
+              <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </Link>
           <Link aria-label={cartLabel} className={navButtonClassName} href={cartHref}>
-            <ShoppingBag size={20} strokeWidth={1} />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white hover:text-gray-300 transition-colors">
+              <path d="M1 1H5L7.68 14.39C7.77144 14.8504 8.02191 15.264 8.38755 15.5583C8.75318 15.8526 9.2107 16.009 9.68 16H19.4C19.8693 16.009 20.3268 15.8526 20.6925 15.5583C21.0581 15.264 21.3086 14.8504 21.4 14.39L23 6H6M10 21C10 21.5523 9.55228 22 9 22C8.44772 22 8 21.5523 8 21C8 20.4477 8.44772 20 9 20C9.55228 20 10 20.4477 10 21ZM21 21C21 21.5523 20.5523 22 20 22C19.4477 22 19 21.5523 19 21C19 20.4477 19.4477 20 20 20C20.5523 20 21 20.4477 21 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             <Stream
               fallback={
                 <span className="bg-contrast-100 text-background absolute -top-0.5 -right-0.5 flex h-4 w-4 animate-pulse items-center justify-center rounded-full text-xs" />
@@ -571,21 +584,14 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
           ) : null}
 
           {/* Currency Dropdown */}
-          <Stream
-            fallback={null}
-            value={Streamable.all([streamableCurrencies, streamableActiveCurrencyId])}
-          >
-            {([currencies, activeCurrencyId]) =>
-              currencies && currencies.length > 1 && currencyAction ? (
-                <CurrencyForm
-                  action={currencyAction}
-                  activeCurrencyId={activeCurrencyId}
-                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                  currencies={currencies as [Currency, ...Currency[]]}
-                />
-              ) : null
-            }
-          </Stream>
+          {currencies && currencies.length > 1 && currencyAction ? (
+            <CurrencyForm
+              action={currencyAction}
+              activeCurrencyId={activeCurrencyId}
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+              currencies={currencies as [Currency, ...Currency[]]}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -653,16 +659,12 @@ function SearchForm<S extends SearchResult>({
     <>
       <form
         action={searchHref}
-        className="flex items-center gap-3 px-3 py-3 @4xl:px-5 @4xl:py-4"
+        className="hidden lg:flex items-center gap-3 px-3 py-2.5 bg-white rounded-full"
+
         onSubmit={handleSubmit}
       >
-        <SearchIcon
-          className="hidden shrink-0 text-[var(--nav-search-icon,hsl(var(--contrast-500)))] @xl:block"
-          size={20}
-          strokeWidth={1}
-        />
         <input
-          className="grow bg-transparent pl-2 text-lg font-medium outline-0 focus-visible:outline-hidden @xl:pl-0"
+          className="grow  pl-2 text-[16px] font-medium outline-0 focus-visible:outline-hidden @xl:pl-0"
           name={searchParamName}
           onChange={(e) => {
             setQuery(e.currentTarget.value);
@@ -693,15 +695,19 @@ function SubmitButton({ loading, submitLabel }: { loading: boolean; submitLabel:
   const { pending } = useFormStatus();
 
   return (
-    <Button
-      loading={pending || loading}
-      shape="circle"
-      size="small"
-      type="submit"
-      variant="secondary"
-    >
-      <ArrowRight aria-label={submitLabel} size={20} strokeWidth={1.5} />
-    </Button>
+    // <Button
+    //   loading={pending || loading}
+    //   shape="circle"
+    //   size="small"
+    //   type="submit"
+    //   variant="secondary"
+    // >
+    <SearchIcon
+      className="shrink-0 text-[var(--nav-search-icon,hsl(var(--contrast-500)))]"
+      size={20}
+      strokeWidth={1}
+    />
+    // </Button>
   );
 }
 
@@ -728,7 +734,7 @@ function SearchResults({
     if (stale) return null;
 
     return (
-      <div className="flex flex-col border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6">
+      <div className="fixed z-[999] flex flex-col border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6">
         {errors.map((error) => (
           <FormStatus key={error} type="error">
             {error}
@@ -742,7 +748,7 @@ function SearchResults({
     if (stale) return null;
 
     return (
-      <div className="flex flex-col border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6">
+      <div className="flex flex-col fixed z-[999] top-[54px] border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6">
         <p className="text-2xl font-medium text-[var(--nav-search-empty-title,hsl(var(--foreground)))]">
           {emptySearchTitle}
         </p>
@@ -756,7 +762,7 @@ function SearchResults({
   return (
     <div
       className={clsx(
-        'flex flex-1 flex-col overflow-y-auto border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] @2xl:flex-row',
+        'fixed z-[999] w-full h-full flex flex-1 flex-col bg-white max-w-[710px] ml-4 top-[54px] overflow-y-auto border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] @2xl:flex-row',
         stale && 'opacity-50',
       )}
     >
@@ -766,7 +772,7 @@ function SearchResults({
             return (
               <section
                 aria-label={result.title}
-                className="flex w-full flex-col gap-1 border-b border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-5 @2xl:max-w-80 @2xl:border-r @2xl:border-b-0"
+                className="flex w-full flex-col gap-6 border-b border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-5 @2xl:max-w-80 @2xl:border-r @2xl:border-b-0"
                 key={`result-${index}`}
               >
                 <h3 className="mb-4 font-[family-name:var(--nav-search-result-title-font-family,var(--font-family-mono))] text-sm text-[var(--nav-search-result-title,hsl(var(--foreground)))] uppercase">
@@ -799,11 +805,11 @@ function SearchResults({
                   {result.title}
                 </h3>
                 <ul
-                  className="grid w-full grid-cols-2 gap-5 @xl:grid-cols-4 @2xl:grid-cols-2 @4xl:grid-cols-4"
+                  className="grid w-full grid-cols-2 gap-5"
                   role="listbox"
                 >
                   {result.products.map((product) => (
-                    <li key={product.id}>
+                    <li key={product.id} className='w-full'>
                       <ProductCard
                         imageSizes="(min-width: 42rem) 25vw, 50vw"
                         product={{

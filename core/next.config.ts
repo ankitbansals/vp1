@@ -49,6 +49,27 @@ export default async (): Promise<NextConfig> => {
   const settings = await writeSettingsToBuildConfig();
 
   let nextConfig: NextConfig = {
+    env: {
+      // BigCommerce API Configuration
+      BIGCOMMERCE_STORE_HASH: process.env.BIGCOMMERCE_STORE_HASH,
+      BIGCOMMERCE_STOREFRONT_TOKEN: process.env.BIGCOMMERCE_STOREFRONT_TOKEN,
+      BIGCOMMERCE_CHANNEL_ID: process.env.BIGCOMMERCE_CHANNEL_ID,
+      BIGCOMMERCE_ACCESS_TOKEN: process.env.BIGCOMMERCE_ACCESS_TOKEN,
+      BIGCOMMERCE_STOREFRONT_API_TOKEN: process.env.BIGCOMMERCE_STOREFRONT_API_TOKEN,
+      
+      // OAuth Configuration
+      CLIENT_ID: process.env.CLIENT_ID,
+      CLIENT_SECRET: process.env.CLIENT_SECRET,
+      
+      // CDN Configuration
+      NEXT_PUBLIC_BIGCOMMERCE_CDN_HOSTNAME: process.env.NEXT_PUBLIC_BIGCOMMERCE_CDN_HOSTNAME,
+      
+      // Other environment variables
+      ENABLE_ADMIN_ROUTE: process.env.ENABLE_ADMIN_ROUTE,
+      AUTH_SECRET: process.env.AUTH_SECRET,
+      MAKESWIFT_SITE_API_KEY: process.env.MAKESWIFT_SITE_API_KEY,
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: process.env.TURBO_REMOTE_CACHE_SIGNATURE_KEY,
+    },
     reactStrictMode: true,
     experimental: {
       optimizePackageImports: ['@icons-pack/react-simple-icons'],
@@ -76,6 +97,19 @@ export default async (): Promise<NextConfig> => {
     },
     // default URL generation in BigCommerce uses trailing slash
     trailingSlash: process.env.TRAILING_SLASH !== 'false',
+    // Configure image optimization to allow images from all domains
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: '**',
+        },
+        {
+          protocol: 'http',
+          hostname: '**',
+        },
+      ],
+    },
     // eslint-disable-next-line @typescript-eslint/require-await
     async headers() {
       return [

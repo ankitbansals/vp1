@@ -1,11 +1,11 @@
 import { BigCommerceAuthError, createClient } from '@bigcommerce/catalyst-client';
-import { headers } from 'next/headers';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { redirect } from 'next/navigation';
 import { getLocale as getServerLocale } from 'next-intl/server';
 
 import { getChannelIdFromLocale } from '../channels.config';
 import { backendUserAgent } from '../userAgent';
+import { ClientConstants } from '../constants/client';
 
 const getLocale = async () => {
   try {
@@ -26,14 +26,15 @@ const getLocale = async () => {
 };
 
 export const client = createClient({
-  storefrontToken: process.env.BIGCOMMERCE_STOREFRONT_TOKEN ?? '',
-  xAuthToken: process.env.BIGCOMMERCE_ACCESS_TOKEN ?? '',
-  storeHash: process.env.BIGCOMMERCE_STORE_HASH ?? '',
-  channelId: process.env.BIGCOMMERCE_CHANNEL_ID,
+  storefrontToken: process.env[ClientConstants.ENV_VARS.STOREFRONT_TOKEN] ?? '',
+  xAuthToken: process.env[ClientConstants.ENV_VARS.ACCESS_TOKEN] ?? '',
+  storeHash: process.env[ClientConstants.ENV_VARS.STORE_HASH] ?? '',
+  channelId: process.env[ClientConstants.ENV_VARS.CHANNEL_ID],
   backendUserAgentExtensions: backendUserAgent,
   logger:
-    (process.env.NODE_ENV !== 'production' && process.env.CLIENT_LOGGER !== 'false') ||
-    process.env.CLIENT_LOGGER === 'true',
+    (process.env[ClientConstants.ENV_VARS.NODE_ENV] !== 'production' && 
+     process.env[ClientConstants.ENV_VARS.CLIENT_LOGGER] !== 'false') ||
+    process.env[ClientConstants.ENV_VARS.CLIENT_LOGGER] === 'true',
   getChannelId: async (defaultChannelId: string) => {
     const locale = await getLocale();
 
@@ -41,30 +42,29 @@ export const client = createClient({
     return getChannelIdFromLocale(locale) ?? defaultChannelId;
   },
   beforeRequest: async (fetchOptions) => {
-    // We can't serialize a `Headers` object within this method so we have to opt into using a plain object
     const requestHeaders: Record<string, string> = {};
     const locale = await getLocale();
 
-    if (fetchOptions?.cache && ['no-store', 'no-cache'].includes(fetchOptions.cache)) {
-      const ipAddress = (await headers()).get('X-Forwarded-For');
-
-      if (ipAddress) {
-        requestHeaders['X-Forwarded-For'] = ipAddress;
-        requestHeaders['True-Client-IP'] = ipAddress;
-      }
-    }
+    // For Pages Router, we can't access headers directly
+    // IP address handling would need to be done at the API level
+    // and passed through context or cookies
 
     if (locale) {
-      requestHeaders['Accept-Language'] = locale;
+      requestHeaders[ClientConstants.HEADERS.ACCEPT_LANGUAGE] = locale;
     }
 
     return {
       headers: requestHeaders,
     };
   },
-  onError: (error, queryType) => {
-    if (error instanceof BigCommerceAuthError && queryType === 'query') {
-      redirect('?invalidate-session');
+  onError(error) {
+    if (typeof window !== 'undefined' && error instanceof BigCommerceAuthError) {
+      // Client-side redirect
+      window.location.href = ClientConstants.ROUTES.LOGIN;
+    } else if (error instanceof BigCommerceAuthError) {
+      // Server-side error handling
+      console.error('Authentication error:', error);
+      // In a real app, you might want to throw a redirect error that your error boundary can catch
     }
   },
 });

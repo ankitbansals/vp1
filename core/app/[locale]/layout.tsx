@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, ReactNode } from 'react'; // Added ReactNode type
 
 import '../../globals.css';
 
@@ -24,6 +24,8 @@ import { CookieNotifications } from '../notifications';
 import { Providers } from '../providers';
 
 import '~/lib/makeswift/components';
+import { getCurrentBrand } from '~/theme';
+import { BrandThemeProvider } from '~/theme/theme-provider';
 
 const RootLayoutMetadataQuery = graphql(`
   query RootLayoutMetadataQuery {
@@ -97,27 +99,48 @@ export default async function RootLayout({ params, children }: Props) {
   // https://next-intl-docs.vercel.app/docs/getting-started/app-router#add-setRequestLocale-to-all-layouts-and-pages
   setRequestLocale(locale);
 
+  const previewMode = (await draftMode()).isEnabled;
+  
+  // Brand detection is now handled by the BrandThemeProvider
+  
   return (
-    <MakeswiftProvider previewMode={(await draftMode()).isEnabled}>
-      <html className={clsx(fonts.map((f) => f.variable))} lang={locale}>
-        <head>
-          <SiteTheme />
-        </head>
-        <body className="flex min-h-screen flex-col">
-          <NextIntlClientProvider>
-            <NuqsAdapter>
+    <html
+      lang={locale}
+      className={clsx(
+        'h-full scroll-smooth',
+        ...fonts.map((font) => font.variable), // Spread font variables
+        'theme-vinod-patel' // Default theme class
+      )}
+      suppressHydrationWarning
+      data-theme="vinod-patel" // Default theme data attribute
+    >
+      <body className="flex h-full flex-col bg-background text-foreground">
+       
+        
+          <MakeswiftProvider previewMode={previewMode}>
+            <BrandThemeProvider>
               <Providers>
-                {toastNotificationCookieData && (
-                  <CookieNotifications {...toastNotificationCookieData} />
-                )}
-                {children}
+                <NextIntlClientProvider locale={locale}>
+                  <SiteTheme>
+                    <NuqsAdapter>
+                      <div className="min-h-screen flex flex-col">
+                        <VercelComponents />
+                        <main className="flex-1">
+                          {children}
+                        </main>
+                        {toastNotificationCookieData && (
+                          <CookieNotifications {...toastNotificationCookieData} />
+                        )}
+                          </div>
+                    </NuqsAdapter>
+                  </SiteTheme>
+                </NextIntlClientProvider>
               </Providers>
-            </NuqsAdapter>
-          </NextIntlClientProvider>
-          <VercelComponents />
-        </body>
-      </html>
-    </MakeswiftProvider>
+            </BrandThemeProvider>
+          </MakeswiftProvider>
+        
+      </body>
+    </html>
   );
 }
 

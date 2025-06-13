@@ -1,0 +1,81 @@
+/* Neutral Theme - Minimal Overrides */
+:root {
+  /* Primary Colors - Neutral Gray */
+  --color-primary-50: #f9fafb;
+  --color-primary-100: #f3f4f6;
+  --color-primary-200: #e5e7eb;
+  --color-primary-300: #d1d5db;
+  --color-primary-400: #9ca3af;
+  --color-primary-500: #6b7280;
+  --color-primary-600: #4b5563;
+  --color-primary-700: #374151;
+  --color-primary-800: #1f2937;
+  --color-primary-900: #111827;
+  
+  /* Semantic Colors */
+  --color-primary: var(--color-primary-600);
+  --color-primary-hover: var(--color-primary-700);
+  --color-primary-foreground: #ffffff;
+  
+  /* Text Colors */
+  --color-text-primary: var(--color-primary-900);
+  --color-text-on-primary: #ffffff;
+  --color-text-brand: var(--color-primary-600);
+  --color-text-brand-secondary: var(--color-primary-700);
+  
+  /* Background Colors */
+  --color-background-brand: #f9fafb;
+  --color-background-brand-solid: var(--color-primary-600);
+  
+  /* Border Colors */
+  --color-border-brand: var(--color-primary-600);
+  
+  /* Brand Specific Variables */
+  --brand-logo-url: url('/images/neutral-logo.svg');
+  --brand-error: #dc2626;
+  --brand-warning: #d97706;
+  --brand-success: #059669;
+}
+
+/* Brand-specific component styles */
+.brand-header {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-400));
+  color: var(--color-primary-foreground);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-button {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-button:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.brand-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-button--outline {
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.brand-button--outline:hover {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-700);
+}

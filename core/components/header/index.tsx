@@ -1,7 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { cache } from 'react';
-
-import { Streamable } from '@/vibes/soul/lib/streamable';
 import { GetLinksAndSectionsQuery, LayoutQuery } from '~/app/[locale]/(default)/page-data';
 import { getSessionCustomerAccessToken } from '~/auth';
 import { client } from '~/client';
@@ -17,6 +15,7 @@ import { SiteHeader as HeaderSection } from '~/lib/makeswift/components/site-hea
 import { search } from './_actions/search';
 import { switchCurrency } from './_actions/switch-currency';
 import { HeaderFragment, HeaderLinksFragment } from './fragment';
+import CategoryNavigation from '@/vibes/soul/primitives/mega-menu';
 
 const GetCartCountQuery = graphql(`
   query GetCartCountQuery($cartId: String) {
@@ -90,15 +89,15 @@ export const Header = async () => {
         }))
     : [];
 
-  const streamableLinks = Streamable.from(async () => {
+  const links = await (async () => {
     const customerAccessToken = await getSessionCustomerAccessToken();
-
     const categoryTree = await getHeaderLinks(customerAccessToken);
 
-    /**  To prevent the navigation menu from overflowing, we limit the number of categories to 6.
-   To show a full list of categories, modify the `slice` method to remove the limit.
-   Will require modification of navigation menu styles to accommodate the additional categories.
-   */
+    /*
+    Currently, the navigation menu is designed to display only 6 categories.
+    If you need to show more than 6 categories, you'll need to update the navigation menu styles accordingly.
+    Will require modification of navigation menu styles to accommodate the additional categories.
+    */
     const slicedTree = categoryTree.slice(0, 6);
 
     return slicedTree.map(({ name, path, children }) => ({
@@ -113,49 +112,46 @@ export const Header = async () => {
         })),
       })),
     }));
-  });
+  })();
 
-  const streamableCartCount = Streamable.from(async () => {
+  const cartCount = await (async () => {
     const cartId = await getCartId();
+    if (!cartId) return null;
+    
     const customerAccessToken = await getSessionCustomerAccessToken();
-
-    if (!cartId) {
-      return null;
-    }
-
     return getCartCount(cartId, customerAccessToken);
-  });
+  })();
 
-  const streamableActiveCurrencyId = Streamable.from(async (): Promise<string | undefined> => {
+  const activeCurrencyId = await (async () => {
     const currencyCode = await getPreferredCurrencyCode();
-
     const defaultCurrency = currencies.find(({ isDefault }) => isDefault);
-
     return currencyCode ?? defaultCurrency?.id;
-  });
+  })();
 
   return (
-    <HeaderSection
-      navigation={{
-        accountHref: '/login',
-        accountLabel: t('Icons.account'),
-        cartHref: '/cart',
-        cartLabel: t('Icons.cart'),
-        searchHref: '/search',
-        searchParamName: 'term',
-        searchAction: search,
-        links: streamableLinks,
-        logo,
-        mobileMenuTriggerLabel: t('toggleNavigation'),
-        openSearchPopupLabel: t('Icons.search'),
-        logoLabel: t('home'),
-        cartCount: streamableCartCount,
-        activeLocaleId: locale,
-        locales,
-        currencies,
-        activeCurrencyId: streamableActiveCurrencyId,
-        currencyAction: switchCurrency,
-      }}
-    />
+    <div>
+      <HeaderSection
+        navigation={{
+          accountHref: '/account',
+          cartHref: '/cart',
+          cartLabel: t('Icons.cart'),
+          searchHref: '/search',
+          searchParamName: 'term',
+          searchAction: search,
+          links,
+          logo,
+          mobileMenuTriggerLabel: t('toggleNavigation'),
+          openSearchPopupLabel: t('Icons.search'),
+          logoLabel: t('home'),
+          cartCount,
+          activeLocaleId: locale,
+          locales,
+          currencies,
+          activeCurrencyId,
+          currencyAction: switchCurrency,
+        }}
+      />
+      <CategoryNavigation />
+    </div>
   );
 };

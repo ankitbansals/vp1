@@ -6,6 +6,7 @@ import {
   BcProductSchema,
   useBcProductToVibesProduct,
 } from './use-bc-product-to-vibes-product/use-bc-product-to-vibes-product';
+import { singleProductCardTransformer } from '~/data-transformers/custom-product-card-transformer';
 
 const ProductListSchema = z.object({
   products: z.array(BcProductSchema),
@@ -56,5 +57,10 @@ export function useProducts({ collection, collectionLimit = 20, additionalProduc
     [isLoading, combinedProducts, bcProductToVibesProduct],
   );
 
-  return { products, isLoading };
+  const transformedProducts = useMemo(
+    () => (isLoading ? null : products?.map(singleProductCardTransformer)),
+    [isLoading, products],
+  );
+
+  return { products: transformedProducts, isLoading };
 }

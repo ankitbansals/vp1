@@ -9,6 +9,7 @@ import {
   Select,
   Style,
   TextInput,
+  Image,
 } from '@makeswift/runtime/controls';
 import { ComponentPropsWithoutRef } from 'react';
 
@@ -69,6 +70,7 @@ runtime.registerComponent(
     icon: 'carousel',
     props: {
       className: Style(),
+      title: TextInput({ label: 'Title', defaultValue: 'Newest Arrivals' }),
       collection: Select({
         label: 'Product collection',
         options: [
@@ -77,7 +79,7 @@ runtime.registerComponent(
           { value: 'newest', label: 'Newest' },
           { value: 'featured', label: 'Featured' },
         ],
-        defaultValue: 'best-selling',
+        defaultValue: 'newest',
       }),
       limit: Number({ label: 'Max collection items', defaultValue: 12 }),
       additionalProducts: List({
@@ -104,23 +106,12 @@ runtime.registerComponent(
           return product?.title || 'Product';
         },
       }),
-      aspectRatio: Select({
-        label: 'Aspect ratio',
-        options: [
-          { value: '1:1', label: 'Square' },
-          { value: '5:6', label: '5:6' },
-          { value: '3:4', label: '3:4' },
-        ],
-        defaultValue: '5:6',
+      showImageBanner: Checkbox({
+        label: 'Show banner',
+        defaultValue: false,
       }),
-      colorScheme: Select({
-        label: 'Text color scheme',
-        options: [
-          { value: 'light', label: 'Light' },
-          { value: 'dark', label: 'Dark' },
-        ],
-        defaultValue: 'light',
-      }),
+      imageSrc: Image({ label: 'Image' }),
+      imageAlt: TextInput({ label: 'Image Alt/Title' }),
       showScrollbar: Checkbox({
         label: 'Show scrollbar',
         defaultValue: true,

@@ -9,10 +9,15 @@ import './components/products-list/products-list.makeswift';
 import './components/section/section.makeswift';
 import './components/site-footer/site-footer.makeswift';
 import './components/site-header/site-header.makeswift';
-import './components/slideshow/slideshow.makeswift';
 import './components/sticky-sidebar/sticky-sidebar.makeswift';
 import './components/product-detail/register';
-
+import './components/custom-slideshow/custom-slideshow.makeswift';
+import './components/image-banner/image-banner.makeswift';
+import './components/promo-banner/promo-banner.makeswift';
+import './components/promotions-section/promotions-section.makeswift';
+import './components/featured-product-banner/featured-product-banner.makeswift';
+import './components/featured-categories-section/featured-categories-section.makeswift';
+import './components/featured-brands/featured-brands.makeswift';
 import './components/site-theme/register';
 
 import { MakeswiftComponentType } from '@makeswift/runtime';

@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base theme variables - Vinod Patel Brand */
+:root {
+  /* Primary Colors */
+  --primary: 357 95% 45%;  /* #e30613 */
+  --primary-foreground: 0 0% 100%;
+  
+  /* Background & Text */
+  --background: 0 0% 100%;
+  --foreground: 220 27% 16%;  /* Dark gray for text */
+  
+  /* Muted Colors */
+  --muted: 0 20% 96%;  /* Very light gray */
+  --muted-foreground: 0 0% 45%;  /* Medium gray for secondary text */
+  
+  /* UI Elements */
+  --border: 0 0% 90%;  /* Light gray border */
+  --input: 0 0% 95%;  /* Slightly off-white for inputs */
+  --ring: 357 95% 45%;  /* Match primary color for focus rings */
+  
+  /* Border Radius */
+  --radius: 0.5rem;
+}
+
+/* Dark theme variables - Vinod Patel Dark Mode */
+.dark {
+  --background: 220 27% 10%;  /* Dark background */
+  --foreground: 0 0% 95%;  /* Light text */
+  --muted: 220 15% 20%;  /* Dark muted background */
+  --muted-foreground: 0 0% 65%;  /* Light gray for secondary text */
+  --border: 220 10% 25%;  /* Dark border */
+  --input: 220 10% 20%;  /* Dark input background */
+  --ring: 357 95% 50%;  /* Slightly brighter red for dark mode */
+}
+
+/* Apply theme variables */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Override Makeswift theme colors with !important */
+:root, [data-makeswift="theme"], [data-makeswift="theme-base-colors"] {
+  /* Primary Colors */
+  --primary: 357 95% 45% !important;
+  --primary-foreground: 0 0% 100% !important;
+  
+  /* Background & Text */
+  --background: 0 0% 100% !important;
+  --foreground: 220 27% 16% !important;
+  
+  /* Muted Colors */
+  --muted: 0 20% 96% !important;
+  --muted-foreground: 0 0% 45% !important;
+  
+  /* UI Elements */
+  --border: 0 0% 90% !important;
+  --input: 0 0% 95% !important;
+  --ring: 357 95% 45% !important;
+  
+  /* Accent and other colors */
+  --accent: 357 95% 90% !important;
+  --success: 147 90% 38% !important;
+  --error: 0 84% 60% !important;
+  --warning: 40 100% 50% !important;
+  --info: 210 100% 50% !important;
+  
+  /* Override any green colors */
+  --color-primary: var(--primary) !important;
+  --color-accent: var(--accent) !important;
+  --color-button-primary: var(--primary) !important;
+  --color-button-primary-foreground: var(--primary-foreground) !important;
+}
+
+/* Dark theme overrides */
+.dark {
+  --background: 220 27% 10% !important;
+  --foreground: 0 0% 95% !important;
+  --muted: 220 15% 20% !important;
+  --muted-foreground: 0 0% 65% !important;
+  --border: 220 10% 25% !important;
+  --input: 220 10% 20% !important;
+  --ring: 357 95% 50% !important;
+}

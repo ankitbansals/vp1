@@ -20,8 +20,17 @@ type ContextProps = Omit<FooterProps, 'sections'> & {
   sections: Awaited<FooterProps['sections']>;
 };
 
+const defaultLogo = {
+  src: '',
+  alt: '',
+  width: 0,
+  height: 0,
+};
+
 const PropsContext = createContext<ContextProps>({
   sections: [],
+  logo: defaultLogo,
+  copyright: '',
 });
 
 export const PropsContextProvider = ({
@@ -63,21 +72,32 @@ function combineSections(
   );
 }
 
-export const MakeswiftFooter = forwardRef(
-  ({ logo, sections, copyright }: Props, ref: Ref<HTMLDivElement>) => {
+export const MakeswiftFooter = forwardRef<HTMLDivElement, Props>(
+  ({ logo, sections, copyright }, ref) => {
     const passedProps = useContext(PropsContext);
-    const logoObject = logo.src ? { src: logo.src, alt: logo.alt } : passedProps.logo;
+    const showLogo = logo?.show !== false; // Default to true if not specified
+    
+    // Create logo object with proper type for the Footer component
+    const logoObject = logo?.src 
+      ? { src: logo.src, alt: logo.alt || '' } 
+      : passedProps.logo;
+
+    const footerProps = {
+      ...passedProps,
+      copyright: copyright ?? passedProps.copyright,
+      logo: showLogo ? logoObject : undefined,
+      logoHeight: showLogo ? (logo?.height || 0) : 0,
+      logoWidth: showLogo ? (logo?.width || 0) : 0,
+      sections: combineSections(passedProps.sections, sections)
+    };
+
+    // Remove ref from footerProps since it's not a valid prop for Footer
+    const { ref: _, ...restFooterProps } = footerProps as any;
 
     return (
-      <Footer
-        {...passedProps}
-        copyright={copyright ?? passedProps.copyright}
-        logo={logo.show ? logoObject : undefined}
-        logoHeight={logo.show ? logo.height : 0}
-        logoWidth={logo.show ? logo.width : 0}
-        ref={ref}
-        sections={combineSections(passedProps.sections, sections)}
-      />
+      <div ref={ref}>
+        <Footer {...restFooterProps} />
+      </div>
     );
   },
 );

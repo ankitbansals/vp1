@@ -52,7 +52,7 @@ export const Link = forwardRef<ComponentRef<'a'>, Props>(
     return (
       <NavLink
         className={className}
-        href={href}
+        href={href || '#'}
         onMouseEnter={prefetch === 'hover' ? triggerPrefetch : undefined}
         onTouchStart={prefetch === 'hover' ? triggerPrefetch : undefined}
         prefetch={computedPrefetch}

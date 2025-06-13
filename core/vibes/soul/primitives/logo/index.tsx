@@ -11,6 +11,7 @@ interface Props {
   href: string;
   width: number;
   height: number;
+  brand?: string;
 }
 
 // eslint-disable-next-line valid-jsdoc
@@ -52,7 +53,7 @@ export function Logo({ className, logo: streamableLogo, href, width, height, lab
             />
           ) : (
             typeof logo === 'string' && (
-              <span className="font-[family-name:var(--logo-font-family,var(--font-family-heading))] text-lg leading-none font-semibold text-[var(--logo-text,hsl(var(--foreground)))] @xl:text-2xl">
+              <span className="font-[family-name:var(--logo-font-family,var(--font-family-heading))] text-xs leading-none font-semibold text-[var(--logo-text,hsl(var(--foreground)))] @xl:text-2xl">
                 {logo}
               </span>
             )

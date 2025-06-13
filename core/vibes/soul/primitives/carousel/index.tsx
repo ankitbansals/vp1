@@ -127,7 +127,7 @@ function CarouselContent({ className, ...rest }: React.HTMLAttributes<HTMLDivEle
 
   return (
     <div className="w-full" ref={carouselRef}>
-      <div {...rest} className={clsx('-ml-4 flex @2xl:-ml-5', className)} />
+      <div {...rest} className={clsx('flex', className)} />
     </div>
   );
 }
@@ -137,7 +137,7 @@ function CarouselItem({ className, ...rest }: React.HTMLAttributes<HTMLDivElemen
     <div
       {...rest}
       aria-roledescription="slide"
-      className={clsx('min-w-0 shrink-0 grow-0 pl-4 @2xl:pl-5', className)}
+      className={clsx('min-w-0 shrink-0 grow-0 ', className)}
       role="group"
     />
   );
@@ -172,29 +172,27 @@ function CarouselButtons({
     <div
       {...rest}
       className={clsx(
-        'flex gap-2',
-        {
-          light: 'text-[var(--carousel-light-button,hsl(var(--foreground)))]',
-          dark: 'text-[var(--carousel-dark-button,hsl(var(--background)))]',
-        }[colorScheme],
+        'flex gap-8', // 32px gap between buttons as per the image
         className,
       )}
     >
       <button
-        className="rounded-lg ring-[var(--carousel-focus,hsl(var(--primary)))] transition-colors duration-300 focus-visible:ring-2 focus-visible:outline-0 disabled:pointer-events-none disabled:opacity-25"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-red-500 p-2.5 text-red-500 transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:pointer-events-none disabled:opacity-25"
         disabled={!canScrollPrev}
         onClick={scrollPrev}
         title={previousLabel}
+        aria-label={previousLabel}
       >
-        <ArrowLeft strokeWidth={1.5} />
+        <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
       </button>
       <button
-        className="rounded-lg ring-[var(--carousel-focus,hsl(var(--primary)))] transition-colors duration-300 focus-visible:ring-2 focus-visible:outline-0 disabled:pointer-events-none disabled:opacity-25"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-red-500 p-2.5 text-red-500 transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:pointer-events-none disabled:opacity-25"
         disabled={!canScrollNext}
         onClick={scrollNext}
         title={nextLabel}
+        aria-label={nextLabel}
       >
-        <ArrowRight strokeWidth={1.5} />
+        <ArrowRight className="h-5 w-5" strokeWidth={1.5} />
       </button>
     </div>
   );

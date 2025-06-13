@@ -7,22 +7,17 @@ import {
   CarouselButtons,
   CarouselContent,
   CarouselItem,
-  CarouselScrollbar,
 } from '@/vibes/soul/primitives/carousel';
-import {
-  type Product,
-  ProductCard,
-  ProductCardSkeleton,
-} from '@/vibes/soul/primitives/product-card';
+import { ProductCardSkeleton } from '@/vibes/soul/primitives/product-card';
 import * as Skeleton from '@/vibes/soul/primitives/skeleton';
-
-export type CarouselProduct = Product;
+import ProductCard from '../../primitives/custom-product-card';
+import Image from 'next/image';
+import { CustomProductCardProps } from '~/types/custom-product-card';
+export type CarouselProduct = CustomProductCardProps;
 
 export interface ProductCarouselProps {
-  products: Streamable<CarouselProduct[]>;
+  products: Streamable<CustomProductCardProps[]>;
   className?: string;
-  colorScheme?: 'light' | 'dark';
-  aspectRatio?: '5:6' | '3:4' | '1:1';
   emptyStateTitle?: Streamable<string>;
   emptyStateSubtitle?: Streamable<string>;
   scrollbarLabel?: string;
@@ -32,6 +27,10 @@ export interface ProductCarouselProps {
   showButtons?: boolean;
   showScrollbar?: boolean;
   hideOverflow?: boolean;
+  title?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  showImageBanner?: boolean;
 }
 
 // eslint-disable-next-line valid-jsdoc
@@ -53,17 +52,17 @@ export interface ProductCarouselProps {
 export function ProductCarousel({
   products: streamableProducts,
   className,
-  colorScheme = 'light',
-  aspectRatio = '5:6',
   emptyStateTitle = 'No products found',
   emptyStateSubtitle = 'Try browsing our complete catalog of products.',
-  scrollbarLabel = 'Scroll',
   previousLabel = 'Previous',
   nextLabel = 'Next',
   placeholderCount = 8,
   showButtons = true,
-  showScrollbar = true,
   hideOverflow = true,
+  title = 'New Arrivals',
+  imageSrc,
+  imageAlt = 'Banner Image',
+  showImageBanner = false,
 }: ProductCarouselProps) {
   return (
     <Stream
@@ -81,7 +80,6 @@ export function ProductCarousel({
           return (
             <ProductsCarouselEmptyState
               className={className}
-              colorScheme={colorScheme}
               emptyStateSubtitle={emptyStateSubtitle}
               emptyStateTitle={emptyStateTitle}
               hideOverflow={hideOverflow}
@@ -91,38 +89,59 @@ export function ProductCarousel({
         }
 
         return (
-          <Carousel className={className} hideOverflow={hideOverflow}>
-            <CarouselContent className="mb-10 -ml-4 @2xl:-ml-5">
-              {products.map(({ id, ...product }) => (
-                <CarouselItem
-                  className="basis-full pl-4 @md:basis-1/2 @lg:basis-1/3 @2xl:basis-1/4 @2xl:pl-5"
-                  key={id}
-                >
-                  <ProductCard
-                    aspectRatio={aspectRatio}
-                    colorScheme={colorScheme}
-                    imageSizes="(min-width: 42rem) 25vw, (min-width: 32rem) 33vw, (min-width: 28rem) 50vw, 100vw"
-                    product={{ id, ...product }}
+          <div className={clsx('relative', className)}>
+            <div className="relative flex gap-16">
+              {/* Static Banner */}
+              {showImageBanner && imageSrc && (
+                <div className="sticky top-4 hidden h-fit shrink-0 basis-[440px] @lg:block">
+                  <div className="mb-8">
+                    <h2 className="text-2xl font-bold leading-7 text-gray-950 @md:text-3xl @md:leading-9">
+                      {title}
+                    </h2>
+                  </div>
+                  <Image
+                    src={imageSrc}
+                    alt={imageAlt}
+                    className="h-[600px] w-[440px] rounded-lg object-cover"
+                    width={440}
+                    height={600}
                   />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {(showButtons || showScrollbar) && (
-              <div className="mt-10 flex w-full items-center justify-between gap-8">
-                <CarouselScrollbar
-                  className={clsx(!showScrollbar && 'pointer-events-none invisible')}
-                  colorScheme={colorScheme}
-                  label={scrollbarLabel}
-                />
-                <CarouselButtons
-                  className={clsx(!showButtons && 'pointer-events-none invisible')}
-                  colorScheme={colorScheme}
-                  nextLabel={nextLabel}
-                  previousLabel={previousLabel}
-                />
+                </div>
+              )}
+              
+              {/* Scrollable Products */}
+              <div className="flex-1">
+
+                <Carousel hideOverflow={hideOverflow}>
+                <div className={`mb-8 flex w-full gap-5 ${!showImageBanner ? 'justify-between' : 'justify-end'}`}>
+                  {!showImageBanner && (
+                    <h2 className="text-2xl font-bold leading-7 text-gray-950 @md:text-3xl @md:leading-9">
+                      {title}
+                    </h2>
+                  )}
+                  {showButtons && (
+                    <div className="mb-4 flex justify-end gap-4">
+                      <CarouselButtons
+                        nextLabel={nextLabel}
+                        previousLabel={previousLabel}
+                      />
+                    </div>
+                  )}
+                </div>
+                  <CarouselContent className="mb-10 gap-5 xl:gap-8">
+                    {products.map((product, index) => (
+                      <CarouselItem
+                        className="w-full max-w-[308px] basis-full @md:basis-1/2 @lg:basis-1/3 @2xl:basis-1/4"
+                        key={index}
+                      >
+                        <ProductCard {...product} />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
               </div>
-            )}
-          </Carousel>
+            </div>
+          </div>
         );
       }}
     </Stream>
@@ -169,15 +188,9 @@ export function ProductsCarouselEmptyState({
   emptyStateTitle,
   emptyStateSubtitle,
   hideOverflow,
-  colorScheme = 'light',
 }: Pick<
   ProductCarouselProps,
-  | 'className'
-  | 'placeholderCount'
-  | 'emptyStateTitle'
-  | 'emptyStateSubtitle'
-  | 'hideOverflow'
-  | 'colorScheme'
+  'className' | 'placeholderCount' | 'emptyStateTitle' | 'emptyStateSubtitle' | 'hideOverflow'
 >) {
   return (
     <Skeleton.Root className={clsx('relative', className)} hideOverflow={hideOverflow}>
@@ -198,10 +211,6 @@ export function ProductsCarouselEmptyState({
           <h3
             className={clsx(
               'font-[family-name:var(--product-carousel-empty-title-font-family,var(--font-family-heading))] text-2xl leading-tight @4xl:text-4xl @4xl:leading-none',
-              {
-                light: 'text-[var(--product-carousel-light-empty-title,hsl(var(--foreground)))]',
-                dark: 'text-[var(--product-carousel-dark-empty-title,hsl(var(--background)))]',
-              }[colorScheme],
             )}
           >
             {emptyStateTitle}
@@ -209,11 +218,6 @@ export function ProductsCarouselEmptyState({
           <p
             className={clsx(
               'font-[family-name:var(--product-carousel-empty-subtitle-font-family,var(--font-family-body))] text-sm @4xl:text-lg',
-              {
-                light:
-                  'text-[var(--product-carousel-light-empty-subtitle,hsl(var(--contrast-500)))]',
-                dark: 'text-[var(--product-carousel-dark-empty-subtitle,hsl(var(--contrast-200)))]',
-              }[colorScheme],
             )}
           >
             {emptyStateSubtitle}
